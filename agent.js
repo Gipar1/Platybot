@@ -43,14 +43,28 @@ export async function agentLoop(goal, maxSteps = config.llm.maxSteps, sessionHis
 
     try {
       const activeModel = model || DEFAULT_MODEL;
-      const response = await client.chat.completions.create({
-        model: activeModel,
-        messages,
-        tools,
-        tool_choice: "auto",
-        temperature: config.llm.temperature,
-        max_tokens: config.llm.maxTokens,
-      });
+
+      // Retry up to 3 times on transient provider errors (502, 503, 529)
+      let response;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        response = await client.chat.completions.create({
+          model: activeModel,
+          messages,
+          tools,
+          tool_choice: "auto",
+          temperature: config.llm.temperature,
+          max_tokens: config.llm.maxTokens,
+        });
+        if (response.choices?.length) break;
+        const errCode = response.error?.code;
+        if (errCode === 502 || errCode === 503 || errCode === 529) {
+          const wait = (attempt + 1) * 5000;
+          log("agent", `Provider error ${errCode}, retrying in ${wait / 1000}s (attempt ${attempt + 1}/3)`);
+          await new Promise((r) => setTimeout(r, wait));
+        } else {
+          break; // non-retryable error
+        }
+      }
 
       if (!response.choices?.length) {
         log("error", `Bad API response: ${JSON.stringify(response).slice(0, 200)}`);
