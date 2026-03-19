@@ -95,7 +95,7 @@ function stopCronJobs() {
   _cronTasks = [];
 }
 
-function startCronJobs() {
+export function startCronJobs() {
   stopCronJobs(); // stop any running tasks before (re)starting
 
   const mgmtTask = cron.schedule(`*/${Math.max(1, config.schedule.managementIntervalMin)} * * * *`, async () => {
