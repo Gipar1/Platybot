@@ -1,36 +1,25 @@
-# Dependencies
-node_modules/
-
-# Environment & secrets
+# Sensitive — JANGAN di-push
 .env
-.env.*
-!.env.example
-
-# User config (contains RPC URL, wallet key, API keys)
 user-config.json
-
-# Runtime state (position tracking, lessons — user-specific)
-state.json
+kairos-memory.json
 lessons.json
-smart-wallets.json
-pool-memory.json
-token-blacklist.json
+state.json
 strategy-library.json
+deployer-blacklist.json
+smart-wallets.json
 
-# Logs
+# Runtime files
 logs/
+node_modules/
+DRY_RUN=true
+dlmm-agent@1.0.0
+platybot@1.0.0
+
+# Backup
+*.bak
+*.bak.*
+platybot-backup*/
 
 # OS
 .DS_Store
-
-# Dev context
-context.md
-
-# Discord listener queue
-discord-signals.json
-
-# Playwright MCP browser logs
-.playwright-mcp/
-
-# Claude Code runtime lock
-.claude/scheduled_tasks.lock
+Thumbs.db

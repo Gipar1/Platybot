@@ -1,4 +1,4 @@
-# Meridian — CLAUDE.md
+# Platybot — CLAUDE.md
 
 Autonomous DLMM liquidity provider agent for Meteora pools on Solana.
 

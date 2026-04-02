@@ -138,8 +138,8 @@ const ev = (key, fallback) => existingEnv[key] ?? fallback;
 // ─── Banner ────────────────────────────────────────────────────────────────────
 console.log(`
 ╔═══════════════════════════════════════════════╗
-║        Meridian — Setup Wizard                ║
-║        Autonomous Meteora DLMM LP Agent       ║
+║        Platybot — Setup Wizard                ║
+║        Autonomous Meteora Platybot       ║
 ╚═══════════════════════════════════════════════╝
 
 This wizard creates your .env and user-config.json.

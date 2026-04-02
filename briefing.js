@@ -1,71 +1,59 @@
-import fs from "fs";
+import { getLessonsForPrompt, getPerformanceSummary } from "./lessons.js";
+import { discoverPools } from "./tools/screening.js";
 import { log } from "./logger.js";
-import { getPerformanceSummary } from "./lessons.js";
-
-const STATE_FILE = "./state.json";
-const LESSONS_FILE = "./lessons.json";
 
 export async function generateBriefing() {
-  const state = loadJson(STATE_FILE) || { positions: {}, recentEvents: [] };
-  const lessonsData = loadJson(LESSONS_FILE) || { lessons: [], performance: [] };
-
-  const now = new Date();
-  const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-  // 1. Positions Activity
-  const allPositions = Object.values(state.positions || {});
-  const openedLast24h = allPositions.filter(p => new Date(p.deployed_at) > last24h);
-  const closedLast24h = allPositions.filter(p => p.closed && new Date(p.closed_at) > last24h);
-
-  // 2. Performance Activity (from performance log)
-  const perfLast24h = (lessonsData.performance || []).filter(p => new Date(p.recorded_at) > last24h);
-  const totalPnLUsd = perfLast24h.reduce((sum, p) => sum + (p.pnl_usd || 0), 0);
-  const totalFeesUsd = perfLast24h.reduce((sum, p) => sum + (p.fees_earned_usd || 0), 0);
-
-  // 3. Lessons Learned
-  const lessonsLast24h = (lessonsData.lessons || []).filter(l => new Date(l.created_at) > last24h);
-
-  // 4. Current State
-  const openPositions = allPositions.filter(p => !p.closed);
-  const perfSummary = getPerformanceSummary();
-
-  // 5. Format Message
-  const lines = [
-    "☀️ <b>Morning Briefing</b> (Last 24h)",
-    "────────────────",
-    `<b>Activity:</b>`,
-    `📥 Positions Opened: ${openedLast24h.length}`,
-    `📤 Positions Closed: ${closedLast24h.length}`,
-    "",
-    `<b>Performance:</b>`,
-    `💰 Net PnL: ${totalPnLUsd >= 0 ? "+" : ""}$${totalPnLUsd.toFixed(2)}`,
-    `💎 Fees Earned: $${totalFeesUsd.toFixed(2)}`,
-    perfLast24h.length > 0
-      ? `📈 Win Rate (24h): ${Math.round((perfLast24h.filter(p => p.pnl_usd > 0).length / perfLast24h.length) * 100)}%`
-      : "📈 Win Rate (24h): N/A",
-    "",
-    `<b>Lessons Learned:</b>`,
-    lessonsLast24h.length > 0
-      ? lessonsLast24h.map(l => `• ${l.rule}`).join("\n")
-      : "• No new lessons recorded overnight.",
-    "",
-    `<b>Current Portfolio:</b>`,
-    `📂 Open Positions: ${openPositions.length}`,
-    perfSummary
-      ? `📊 All-time PnL: $${perfSummary.total_pnl_usd.toFixed(2)} (${perfSummary.win_rate_pct}% win)`
-      : "",
-    "────────────────"
-  ];
-
-  return lines.join("\n");
-}
-
-function loadJson(file) {
-  if (!fs.existsSync(file)) return null;
   try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch (err) {
-    log("briefing_error", `Failed to read ${file}: ${err.message}`);
-    return null;
+    const [pools, perfSummary, lessons] = await Promise.all([
+      discoverPools().catch(() => []),
+      getPerformanceSummary().catch(() => "Belum ada data performance."),
+      getLessonsForPrompt(5).catch(() => ""),
+    ]);
+
+    const poolsArr = Array.isArray(pools) ? pools : (pools?.pools || pools?.candidates || Object.values(pools || {}));
+    const topPools = poolsArr.slice(0, 5);
+    const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+
+    // Market snapshot
+    const poolLines = topPools.length > 0
+      ? topPools.map((p, i) => {
+          const fee = (p.fee_active_tvl_ratio ?? 0).toFixed(2);
+          const vol = p.trade_volume_24h ? `$${Math.round(p.trade_volume_24h / 1000)}k` : "$0";
+          const organic = p.organic_score ?? 0;
+          const inRange = p.in_range_pct ? `${p.in_range_pct.toFixed(0)}%` : "?";
+          const warning = p.trade_volume_24h < 1000 ? " LOW VOL" :
+                          organic < 70 ? " LOW ORGANIC" :
+                          fee > 5 ? " HOT" : "";
+          return `${i + 1}. ${p.name || p.mint?.slice(0,8)}\n   Fee/TVL: ${fee}% | Vol: ${vol} | Organic: ${organic} | In-Range: ${inRange}${warning}`;
+        }).join("\n\n")
+      : "Tidak ada pool yang lolos filter saat ini.";
+
+    // Action recommendation
+    const hotPool = topPools.find(p => (p.fee_active_tvl_ratio ?? 0) > 3 && (p.organic_score ?? 0) >= 75);
+    const actionLine = hotPool
+      ? `REKOMENDASI: Deploy ke ${hotPool.name} — fee/TVL tinggi + organic bagus.`
+      : "REKOMENDASI: Tunggu dulu, belum ada pool yang cukup kuat hari ini.";
+
+    const briefing = [
+      "MORNING BRIEFING — Platypus Meridian",
+      now,
+      "",
+      "PERFORMA BOT (24h)",
+      typeof perfSummary === "string" ? perfSummary : JSON.stringify(perfSummary),
+      "",
+      "MARKET SNAPSHOT — TOP POOLS SEKARANG",
+      poolLines,
+      "",
+      actionLine,
+      "",
+      "LESSONS AKTIF (top 5)",
+      lessons || "Belum ada lesson. Jalankan /learn dulu.",
+    ].join("\n");
+
+    return briefing;
+
+  } catch (e) {
+    log("briefing", `Error: ${e.message}`);
+    return "Briefing gagal dimuat. Coba lagi nanti.";
   }
 }

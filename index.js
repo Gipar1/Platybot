@@ -9,7 +9,9 @@ import { getTopCandidates } from "./tools/screening.js";
 import { config, reloadScreeningThresholds, computeDeployAmount } from "./config.js";
 import { evolveThresholds, getPerformanceSummary } from "./lessons.js";
 import { registerCronRestarter } from "./tools/executor.js";
-import { startPolling, stopPolling, sendMessage, sendHTML, notifyOutOfRange, isEnabled as telegramEnabled } from "./telegram.js";
+import { startPolling, stopPolling, sendMessage, sendHTML, notifyOutOfRange, isEnabled as telegramEnabled, setCommandMenu } from "./telegram.js";
+import { kairosHeartbeat, autoDream, kairosLog, getKairosContext } from "./kairos.js";
+import { addLesson } from "./lessons.js";
 import { generateBriefing } from "./briefing.js";
 import { getLastBriefingDate, setLastBriefingDate, getTrackedPosition, setPositionInstruction, updatePnlAndCheckExits } from "./state.js";
 import { getActiveStrategy } from "./strategy-library.js";
@@ -17,7 +19,7 @@ import { recordPositionSnapshot, recallForPool, addPoolNote } from "./pool-memor
 import { checkSmartWalletsOnPool } from "./smart-wallets.js";
 import { getTokenNarrative, getTokenInfo } from "./tools/token.js";
 
-log("startup", "DLMM LP Agent starting...");
+log("startup", "Platybot starting...");
 log("startup", `Mode: ${process.env.DRY_RUN === "true" ? "DRY RUN" : "LIVE"}`);
 log("startup", `Model: ${process.env.LLM_MODEL || "hermes-3-405b"}`);
 
@@ -641,7 +643,7 @@ if (isTTY) {
   // ── Startup: show wallet + top candidates ──
   console.log(`
 ╔═══════════════════════════════════════════╗
-║         DLMM LP Agent — Ready             ║
+║         Platybot — Ready             ║
 ╚═══════════════════════════════════════════╝
 `);
 
@@ -761,6 +763,49 @@ if (isTTY) {
       return;
     }
 
+    if (text === "/kairos") {
+      try {
+        const k = getKairosContext();
+        const lastDream = k.last_dream ? new Date(k.last_dream).toLocaleString("id-ID", {timeZone:"Asia/Jakarta"}) : "Belum pernah";
+        const msg = "KAIROS Memory System\n\nLast Auto-Dream: " + lastDream + "\nTotal Sessions: " + k.total_sessions + "\nHeartbeat: " + k.heartbeat_count + "\n\nLast Meta-Lesson:\n" + (k.last_meta_lesson || "Belum ada.");
+        await sendMessage(msg);
+      } catch(e) { await sendMessage("Error: " + e.message); }
+      return;
+    }
+    if (text === "/dryrun") {
+      try {
+        await sendMessage("Simulasi dry-run dimulai...");
+        const pools = await discoverPools();
+        const poolsArr = Array.isArray(pools) ? pools : (pools?.pools || pools?.candidates || Object.values(pools || {}));
+        const top = poolsArr.slice(0, 5);
+        if (top.length === 0) { await sendMessage("Tidak ada pool yang lolos filter saat ini."); return; }
+        const lines = top.map((p, i) => {
+          const fee = p.fee_active_tvl_ratio ?? 0;
+          const organic = p.organic_score ?? 0;
+          const projected = (0.15 * fee / 100).toFixed(4);
+          const verdict = fee > 3 && organic >= 75 ? "DEPLOY" : organic < 70 ? "SKIP (organic rendah)" : fee < 1 ? "SKIP (fee rendah)" : "WAIT";
+          return (i+1) + ". " + (p.name || "Unknown") + "\nFee/TVL: " + fee.toFixed(2) + "% | Organic: " + organic + "\nProjected fee: " + projected + " SOL\nVerdict: " + verdict;
+        });
+        await sendMessage("VIRTUAL DRY-RUN (simulasi 0.15 SOL)\nTidak ada SOL terpakai. Hasil disimpan ke KAIROS.\n\n" + lines.join("\n\n"));
+        for (const p of top) {
+          const fee = p.fee_active_tvl_ratio ?? 0;
+          const organic = p.organic_score ?? 0;
+          const verdict = fee > 3 && organic >= 75 ? "DEPLOY" : organic < 70 ? "SKIP" : fee < 1 ? "SKIP" : "WAIT";
+          await addLesson("DRYRUN " + new Date().toLocaleDateString("id-ID") + ": Pool " + (p.name||"Unknown") + " Fee/TVL:" + fee.toFixed(2) + "% Organic:" + organic + " Verdict:" + verdict, ["dryrun","kairos","virtual"]);
+        }
+      } catch(e) { await sendMessage("Error: " + e.message); }
+      return;
+    }
+    if (text === "/dryon") {
+      process.env.AUTO_DRYRUN = "true";
+      await sendMessage("Auto dry-run learning AKTIF. Bot akan simulasi tiap screening cycle dan simpan ke KAIROS.");
+      return;
+    }
+    if (text === "/dryoff") {
+      process.env.AUTO_DRYRUN = "false";
+      await sendMessage("Auto dry-run learning MATI.");
+      return;
+    }
     busy = true;
     try {
       log("telegram", `Incoming: ${text}`);
@@ -780,6 +825,7 @@ if (isTTY) {
     }
   }
 
+  setCommandMenu().catch(() => {});
   startPolling(telegramHandler);
 
   console.log(`

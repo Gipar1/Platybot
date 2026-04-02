@@ -123,6 +123,32 @@ async function poll(onMessage) {
   }
 }
 
+
+export async function setCommandMenu() {
+  if (!TOKEN) return;
+  const commands = [
+    { command: "start", description: "Menu utama + status bot" },
+    { command: "status", description: "Cek wallet + posisi aktif" },
+    { command: "candidates", description: "Lihat pool terbaik sekarang" },
+    { command: "briefing", description: "Morning briefing + market snapshot" },
+    { command: "learn", description: "Belajar dari top LPers (KAIROS)" },
+    { command: "kairos", description: "Lihat KAIROS memory + Auto-Dream" },
+    { command: "dryrun", description: "Simulasi deploy tanpa SOL" },
+    { command: "dryon", description: "Nyalain auto dry-run learning" },
+    { command: "dryoff", description: "Matiin auto dry-run learning" },
+    { command: "positions", description: "Semua posisi LP aktif" },
+    { command: "thresholds", description: "Lihat screening thresholds" },
+    { command: "evolve", description: "Trigger threshold evolution" },
+    { command: "swap", description: "Convert token ke SOL atau USDC" },
+    { command: "stop", description: "Matikan bot" },
+  ];
+  await fetch(`${BASE}/setMyCommands`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ commands }),
+  });
+}
+
 export function startPolling(onMessage) {
   if (!TOKEN) return;
   _polling = true;
