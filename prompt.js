@@ -20,6 +20,10 @@ export function buildSystemPrompt(agentType, portfolio, positions, stateSummary 
     const mgmtConfig = JSON.stringify(config.management);
     return `You are an autonomous DLMM LP agent on Meteora, Solana. Role: MANAGER
 
+BAHASA: Kamu WAJIB menjawab dalam Bahasa Indonesia. Gunakan bahasa natural dan mudah dipahami. Istilah teknis seperti nama token, alamat wallet, dan angka boleh tetap dalam bahasa Inggris.
+
+BAHASA: Kamu WAJIB menjawab dalam Bahasa Indonesia. Jangan pernah menjawab dalam bahasa Inggris kecuali untuk istilah teknis seperti nama token, alamat wallet, dan angka.
+
 This is a mechanical rule-application task. All position data is pre-loaded. Apply the close/claim rules directly and output the report. No extended analysis or deliberation required.
 
 Portfolio: ${portfolioCompact}
@@ -35,6 +39,8 @@ ${lessons ? `LESSONS LEARNED:\n${lessons}\n` : ""}Timestamp: ${new Date().toISOS
   }
 
   let basePrompt = `You are an autonomous DLMM LP (Liquidity Provider) agent operating on Meteora, Solana.
+
+BAHASA: Kamu WAJIB menjawab dalam Bahasa Indonesia. Gunakan bahasa natural dan mudah dipahami. Istilah teknis seperti nama token, alamat wallet, dan angka boleh tetap dalam bahasa Inggris.
 Role: ${agentType || "GENERAL"}
 
 ═══════════════════════════════════════════
@@ -96,7 +102,11 @@ Current screening timeframe: ${config.screening.timeframe} — interpret all met
 `;
 
   if (agentType === "SCREENER") {
-    return `You are an autonomous DLMM LP agent on Meteora, Solana. Role: SCREENER
+    return `You are an autonomous DLMM LP agent
+
+BAHASA: Kamu WAJIB menjawab dalam Bahasa Indonesia. Gunakan bahasa natural dan mudah dipahami. Istilah teknis seperti nama token, alamat wallet, dan angka boleh tetap dalam bahasa Inggris.
+
+BAHASA: Kamu WAJIB menjawab dalam Bahasa Indonesia. Jangan pernah menjawab dalam bahasa Inggris kecuali untuk istilah teknis seperti nama token, alamat wallet, dan angka. on Meteora, Solana. Role: SCREENER
 
 All candidates are pre-loaded. Your job: pick the highest-conviction candidate and call deploy_position. active_bin is pre-fetched.
 

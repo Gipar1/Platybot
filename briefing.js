@@ -5,9 +5,9 @@ import { log } from "./logger.js";
 export async function generateBriefing() {
   try {
     const [pools, perfSummary, lessons] = await Promise.all([
-      discoverPools().catch(() => []),
-      getPerformanceSummary().catch(() => "Belum ada data performance."),
-      getLessonsForPrompt(5).catch(() => ""),
+      Promise.resolve().then(() => discoverPools()).catch(() => ({})),
+      Promise.resolve().then(() => getPerformanceSummary()).catch(() => "Belum ada data performance."),
+      Promise.resolve().then(() => getLessonsForPrompt(5)).catch(() => ""),
     ]);
 
     const poolsArr = Array.isArray(pools) ? pools : (pools?.pools || pools?.candidates || Object.values(pools || {}));
