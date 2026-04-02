@@ -11,13 +11,12 @@ Dibangun di atas Platybot oleh Platybot — dikustomisasi dengan KAIROS memory s
 - Full Telegram control
 
 ## Install (1 command)
-```bash
-curl -fsSL https://raw.githubusercontent.com/USERNAME/platybot/main/install.sh | bash
-```
+```curl -fsSL https://raw.githubusercontent.com/Gipar1/Platybot/main/install.sh | bash
+git clone https://github.com/Gipar1/Platybot.git
 
 ## Manual Setup
 ```bash
-git clone https://github.com/USERNAME/platybot.git
+git clone https://github.com/gipar1/platybot.git
 cd platybot
 npm install
 cp .env.example .env
