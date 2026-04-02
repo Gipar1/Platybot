@@ -25,7 +25,7 @@ if [ -d "platybot" ]; then
   cd platybot
 else
   echo "📥 Cloning Platybot..."
-  git clone https://github.com/USERNAME/platybot.git platybot
+  git clone https://github.com/Gipar1/Platybot.git platybot
   cd platybot
 fi
 
