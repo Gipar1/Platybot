@@ -76,12 +76,12 @@ export async function autoDream() {
   // Phase 1: Orient — pahami konteks besar
   log("kairos", "Phase 1: Orient");
   const totalLessons = lessons.length;
-  const yunusLessons = lessons.filter(l => l.outcome === "manual" || l.pinned === true || l.tags?.includes("yunus"));
+  const platybotLessons = lessons.filter(l => l.outcome === "manual" || l.pinned === true || l.tags?.includes("platybot"));
   const kairosLessons = lessons.filter(l => l.tags?.includes("kairos"));
 
   // Phase 2: Gather — kumpulkan pattern
   log("kairos", "Phase 2: Gather");
-  const goodLessons = lessons.filter(l => l.outcome === "good" || l.tags?.includes("yunus"));
+  const goodLessons = lessons.filter(l => l.outcome === "good" || l.tags?.includes("platybot"));
   const badLessons = lessons.filter(l => l.outcome === "bad");
   const winRate = totalLessons > 0
     ? ((goodLessons.length / totalLessons) * 100).toFixed(1)
@@ -92,7 +92,7 @@ export async function autoDream() {
   const metaLesson = `META-LESSON (Auto-Dream ${new Date().toLocaleDateString("id-ID")}): ` +
     `Total ${totalLessons} lessons aktif. ` +
     `Win rate pattern: ${winRate}%. ` +
-    `${yunusLessons.length} lessons dari @0xyunss (permanen). ` +
+    `${platybotLessons.length} lessons dari Platybot (permanen). ` +
     `${badLessons.length} bad patterns dihindari. ` +
     `Rekomendasi: prioritaskan pool SOL-paired + organic >75 + narrative kuat.`;
 
@@ -102,10 +102,10 @@ export async function autoDream() {
     created_at: new Date().toISOString(),
   }].slice(-30); // keep last 30 meta-lessons
 
-  // Phase 4: Prune — hapus lesson duplikat/lemah (kecuali yunus & pinned)
+  // Phase 4: Prune — hapus lesson duplikat/lemah (kecuali platybot & pinned)
   log("kairos", "Phase 4: Prune");
   const toDelete = lessons.filter(l =>
-    !l.tags?.includes("yunus") &&
+    !l.tags?.includes("platybot") &&
     !l.tags?.includes("pinned") &&
     !l.tags?.includes("meta") &&
     l.outcome === "bad" &&

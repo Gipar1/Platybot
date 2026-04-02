@@ -20,7 +20,7 @@ You have access to these CLI commands:
 - `onchainos token holders --address <mint> --chain solana --tag-filter 3` — smart money holders
 - `onchainos token trending --chains solana` — trending tokens by volume
 
-**Meridian CLI (use `node cli.js <cmd>`):**
+**Platybot CLI (use `node cli.js <cmd>`):**
 - `node cli.js lessons` — learned rules from past positions (read this first every cycle)
 - `node cli.js performance` — closed position history, win rate, range efficiency
 - `node cli.js pool-memory --pool <addr>` — previous deploy history for a pool

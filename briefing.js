@@ -35,7 +35,7 @@ export async function generateBriefing() {
       : "REKOMENDASI: Tunggu dulu, belum ada pool yang cukup kuat hari ini.";
 
     const briefing = [
-      "MORNING BRIEFING — Platypus Meridian",
+      "MORNING BRIEFING — Platybot",
       now,
       "",
       "PERFORMA BOT (24h)",

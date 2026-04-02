@@ -1,7 +1,7 @@
 # 🦆 Platybot
 
 Autonomous DLMM LP agent untuk Meteora di Solana. Dioperasikan lewat Telegram.
-Dibangun di atas Meridian oleh @0xyunss — dikustomisasi dengan KAIROS memory system.
+Dibangun di atas Platybot oleh Platybot — dikustomisasi dengan KAIROS memory system.
 
 ## Fitur
 - Screening pool otomatis (fee/TVL, organic score, wash filter, rugpull flag)
@@ -53,5 +53,5 @@ AUTO_DRYRUN=true        # auto learning mode
 Semua lainnya bisa natural language langsung di chat.
 
 ## Credit
-- Original: [@0xyunss/meridian](https://github.com/yunus-0x/meridian)
+- Original: [Platybot/platybot](https://github.com/Platybot/platybot)
 - KAIROS system & kustomisasi: Platybot
