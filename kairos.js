@@ -89,13 +89,20 @@ export async function autoDream() {
 
   // Phase 3: Consolidate — buat meta-lesson
   log("kairos", "Phase 3: Consolidate");
-  const metaLesson = `META-LESSON (Auto-Dream ${new Date().toLocaleDateString("id-ID")}): ` +
-    `Total ${totalLessons} lessons aktif. ` +
-    `Win rate pattern: ${winRate}%. ` +
-    `${platybotLessons.length} lessons dari Platybot (permanen). ` +
-    `${badLessons.length} bad patterns dihindari. ` +
-    `Rekomendasi: prioritaskan pool SOL-paired + organic >75 + narrative kuat.`;
-
+  let metaLesson;
+  try {
+    const sampleLessons = lessons.slice(0, 20).map(l => l.rule).join("\n");
+    const res = await fetch(process.env.LLM_BASE_URL + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.LLM_API_KEY },
+      body: JSON.stringify({ model: process.env.LLM_MODEL || "minimax/minimax-m2.7", max_tokens: 200,
+        messages: [{ role: "user", content: `Kamu KAIROS, memory system DLMM agent. Buat 1 meta-lesson ringkas (max 3 kalimat) Bahasa Indonesia dari ${totalLessons} lessons. Win rate: ${winRate}%. Bad: ${badLessons.length}.\nLessons:\n${sampleLessons}\nMeta-lesson:` }] })
+    });
+    const data = await res.json();
+    metaLesson = `META-LESSON (Auto-Dream ${new Date().toLocaleDateString("id-ID")}): ` + (data?.choices?.[0]?.message?.content?.trim() || "Prioritaskan pool SOL-paired organic >75.");
+  } catch(e) {
+    metaLesson = `META-LESSON (Auto-Dream ${new Date().toLocaleDateString("id-ID")}): Total ${totalLessons} lessons. Win rate: ${winRate}%. Prioritaskan SOL-paired + organic >75.`;
+  }
   await addLesson(metaLesson, ["kairos", "meta", "dream"]);
   mem.meta_lessons = [...(mem.meta_lessons || []), {
     text: metaLesson,
